@@ -1,0 +1,11 @@
+{
+  "web":{
+    "client_id":"1038231563150-hal4vgulqp1ult01tghbvl050j98qnr8.apps.googleusercontent.com",
+    "project_id":"api-doc-314404",
+    "auth_uri":"https://accounts.google.com/o/oauth2/auth",
+    "token_uri":"https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret":"Fg1NJL4EJ8bRQmeZmntIRNhW",
+    "redirect_uris":["http://ec2-18-224-151-24.us-east-2.compute.amazonaws.com:3000/complete-auth"],
+    "javascript_origins":["http://ec2-18-224-151-24.us-east-2.compute.amazonaws.com:3000"]}
+  }
