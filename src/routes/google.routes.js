@@ -1,7 +1,6 @@
 const express= require('express');
 const app = express();
 const auth = require('../apiDoc');
-const {createFile} = require('../document');
 const bodyParser = require('body-parser');
 const { response } = require('express');
 
@@ -11,7 +10,11 @@ app.use(bodyParser.json());
 app.get("/google", async function (req,res) {
     try{
         let id = auth.authorize(req.query);
-        res.send('Complete:'+id.then(response=>console.log(response)));
+        id.then(response=>{
+            console.log(response)
+            let url = 'https://docs.google.com/document/d/'+response+'/edit';
+            res.redirect(url);
+        });
         
         //createFile(token);
     }

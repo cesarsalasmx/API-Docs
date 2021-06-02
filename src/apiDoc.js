@@ -3,7 +3,6 @@ const readline = require("readline");
 const { google } = require("googleapis");
 //const googleapi = require('googleapis');
 const { config } = require("../config");
-const { response } = require("express");
 // If modifying these scopes, delete token.json.
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
 // The file token.json stores the user's access and refresh tokens, and is
@@ -23,17 +22,19 @@ async function authorize(query) {
     config.client_secret,
     config.redirect_uris
   );
-
   // Check if we have previously stored a token.
-  await fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) {
-      return false;
-    }
-    oAuth2Client.setCredentials(JSON.parse(token));
-    getIdDoc(oAuth2Client,query).then(response =>{idDoc=response.data.id});
-    
+  return new Promise((resolve, reject) => {
+    fs.readFile(TOKEN_PATH, (err, token) => {
+      if (err) {
+        reject(false);
+      }
+      oAuth2Client.setCredentials(JSON.parse(token));
+      getIdDoc(oAuth2Client, query).then((response) => {
+        idDoc = response.data.id;
+        resolve(idDoc);
+      });
+    });
   });
-  return idDoc
 }
 /**
  * Get and store new token after prompting for user authorization, and then
@@ -70,13 +71,12 @@ function enterCode(code) {
     return createFile(oAuth2Client, query);
   });
 }
-async function getIdDoc(oauth2Client,query){
-  try{
-    return await createFile(oauth2Client,query);
-  }catch(err){
+async function getIdDoc(oauth2Client, query) {
+  try {
+    return await createFile(oauth2Client, query);
+  } catch (err) {
     return err;
   }
-  
 }
 function createFile(oauth2Client, query) {
   const DRIVE = google.drive({ version: "v3", auth: oauth2Client });
@@ -84,24 +84,24 @@ function createFile(oauth2Client, query) {
   var titleDoc = query.id + " - " + query.dominio;
   return new Promise((resolve, reject) => {
     DRIVE.files.create(
-    {
-      resource: {
-        name: titleDoc,
-        mimeType: "application/vnd.google-apps.document",
+      {
+        resource: {
+          name: titleDoc,
+          mimeType: "application/vnd.google-apps.document",
+        },
+        media: {
+          mimeType: fileType,
+          body: bodyDoc(query),
+        },
       },
-      media: {
-        mimeType: fileType,
-        body: bodyDoc(query),
-      },
-    },
-    function (err, file) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(file);
+      function (err, file) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(file);
+        }
       }
-    }
-  );
+    );
   });
 }
 
