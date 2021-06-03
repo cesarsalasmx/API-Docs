@@ -1,21 +1,11 @@
 const fs = require("fs");
 const readline = require("readline");
 const { google } = require("googleapis");
-//const googleapi = require('googleapis');
 const { config } = require("../config");
-// If modifying these scopes, delete token.json.
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
 const TOKEN_PATH = "token.json";
 let idDoc;
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
+//Check token, create Google Doc and return ID Document
 async function authorize(query) {
   const oAuth2Client = new google.auth.OAuth2(
     config.client_id,
@@ -26,22 +16,21 @@ async function authorize(query) {
   return new Promise((resolve, reject) => {
     fs.readFile(TOKEN_PATH, (err, token) => {
       if (err) {
-        reject(false);
+        reject(err);
       }
-      oAuth2Client.setCredentials(JSON.parse(token));
-      getIdDoc(oAuth2Client, query).then((response) => {
-        idDoc = response.data.id;
-        resolve(idDoc);
-      });
+      else{
+        oAuth2Client.setCredentials(JSON.parse(token));
+        getIdDoc(oAuth2Client, query).then((response) => {
+          //console.log(response)
+          idDoc = response.data.id;
+          resolve(idDoc);
+        });
+      }
     });
   });
 }
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
- */
+
+//Return URL for generate new token
 function getNewToken() {
   const oAuth2Client = new google.auth.OAuth2(
     config.client_id,
@@ -53,6 +42,7 @@ function getNewToken() {
     scope: SCOPES,
   }));
 }
+//Set code that return Google Auth and generate Token
 function enterCode(code) {
   const oAuth2Client = new google.auth.OAuth2(
     config.client_id,
@@ -67,10 +57,9 @@ function enterCode(code) {
       if (err) console.error(err);
       console.log("Token stored to", TOKEN_PATH);
     });
-    var query = {};
-    return createFile(oAuth2Client, query);
   });
 }
+//Set Id Doc
 async function getIdDoc(oauth2Client, query) {
   try {
     return await createFile(oauth2Client, query);
@@ -78,16 +67,20 @@ async function getIdDoc(oauth2Client, query) {
     return err;
   }
 }
+//Create Google Doc with query
 function createFile(oauth2Client, query) {
   const DRIVE = google.drive({ version: "v3", auth: oauth2Client });
   var fileType = "text/html";
   var titleDoc = query.id + " - " + query.dominio;
+  var parents = query.dir;
+  console.log(parents);
   return new Promise((resolve, reject) => {
     DRIVE.files.create(
       {
         resource: {
           name: titleDoc,
           mimeType: "application/vnd.google-apps.document",
+          parents: [parents],
         },
         media: {
           mimeType: fileType,
@@ -104,7 +97,7 @@ function createFile(oauth2Client, query) {
     );
   });
 }
-
+//Template of Google Document
 const bodyDoc = (query) => {
   const body =
     "<header>" +
